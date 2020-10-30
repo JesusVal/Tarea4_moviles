@@ -41,13 +41,22 @@ class _HomeMapState extends State<HomeMap> {
                   markers: _mapMarkers,
                   onLongPress: _setMarker,
                 ),
+                Positioned(
+                  bottom: 30,
+                  left: 10,
+                  // right: 10,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      _getCurrentPosition();
+                    },
+                    child: Icon(
+                      Icons.my_location,
+                      color: Colors.blue,
+                    ),
+                    backgroundColor: Colors.white,
+                  ),
+                ),
               ],
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                Share.share("$_currentPosition", subject: "Aqui me encuentro");
-              },
-              child: Icon(Icons.share),
             ),
           );
         } else {
