@@ -1,8 +1,7 @@
+import 'package:address_search_field/address_search_field.dart';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:share/share.dart';
 
 class HomeMap extends StatefulWidget {
   const HomeMap({Key key}) : super(key: key);
@@ -14,6 +13,7 @@ class HomeMap extends StatefulWidget {
 class _HomeMapState extends State<HomeMap> {
   Set<Marker> _mapMarkers = Set();
   GoogleMapController _mapController;
+  TextEditingController _searchAdreessController = TextEditingController();
   Position _currentPosition;
   Position _defaultPosition = Position(
     longitude: 20.608148,
@@ -23,7 +23,7 @@ class _HomeMapState extends State<HomeMap> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _getCurrentPosition(),
+      // future: _getCurrentPosition(),
       builder: (context, result) {
         if (result.error == null) {
           if (_currentPosition == null) _currentPosition = _defaultPosition;
@@ -54,6 +54,27 @@ class _HomeMapState extends State<HomeMap> {
                       color: Colors.blue,
                     ),
                     backgroundColor: Colors.white,
+                  ),
+                ),
+                Positioned(
+                  top: 60,
+                  left: 10,
+                  right: 10,
+                  child: AddressSearchField(
+                    country: 'México',
+                    city: "Guadalajara",
+                    hintText: "Address",
+                    noResultsText: "No hay resultados.",
+                    onDone:
+                        (BuildContext dialogContext, AddressPoint point) async {
+                      if (point.found) {
+                        _searchAddress(LatLng(point.latitude, point.longitude));
+                        Navigator.of(context).pop();
+                        print('founded');
+                        print(point.latitude);
+                        print(point.longitude);
+                      }
+                    },
                   ),
                 ),
               ],
@@ -100,7 +121,7 @@ class _HomeMapState extends State<HomeMap> {
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
           infoWindow: InfoWindow(
             title: coord.toString(),
-            snippet: _markerAddress,
+            // snippet: _markerAddress,
           ),
         ),
       );
@@ -109,31 +130,33 @@ class _HomeMapState extends State<HomeMap> {
 
   Future<void> _getCurrentPosition() async {
     // verify permissions
-    LocationPermission permission = await checkPermission();
+    /*LocationPermission permission = await checkPermission();
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
       permission = await requestPermission();
-    }
+    }*/
 
     // get current position
-    _currentPosition =
-        await getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    _currentPosition = await Geolocator()
+        .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
     // get address
     String _currentAddress = await _getGeocodingAddress(_currentPosition);
 
     // add marker
-    _mapMarkers.add(
-      Marker(
-        markerId: MarkerId(_currentPosition.toString()),
-        position: LatLng(_currentPosition.latitude, _currentPosition.longitude),
-        infoWindow: InfoWindow(
-          title: _currentPosition.toString(),
-          snippet: _currentAddress,
+    setState(() {
+      _mapMarkers.add(
+        Marker(
+          markerId: MarkerId(_currentPosition.toString()),
+          position:
+              LatLng(_currentPosition.latitude, _currentPosition.longitude),
+          infoWindow: InfoWindow(
+            title: _currentPosition.toString(),
+            snippet: _currentAddress,
+          ),
         ),
-      ),
-    );
-
+      );
+    });
     // move camera
     _mapController.animateCamera(
       CameraUpdate.newCameraPosition(
@@ -149,15 +172,43 @@ class _HomeMapState extends State<HomeMap> {
   }
 
   Future<String> _getGeocodingAddress(Position position) async {
-    // geocoding
-    var places = await placemarkFromCoordinates(
-      position.latitude,
-      position.longitude,
-    );
+    var places = await Geolocator()
+        .placemarkFromCoordinates(position.latitude, position.longitude);
     if (places != null && places.isNotEmpty) {
       final Placemark place = places.first;
       return "${place.thoroughfare}, ${place.locality}";
     }
     return "No address available";
+  }
+
+  Future<void> _searchAddress(LatLng address) async {
+    try {
+      _mapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(
+              address.latitude,
+              address.longitude,
+            ),
+            zoom: 15.0,
+          ),
+        ),
+      );
+
+      setState(() {
+        _mapMarkers.add(
+          Marker(
+            markerId: MarkerId(address.toString()),
+            position: address,
+            infoWindow: InfoWindow(
+              title: _currentPosition.toString(),
+              snippet: address.toString(),
+            ),
+          ),
+        );
+      });
+    } catch (e) {
+      print(e);
+    }
   }
 }

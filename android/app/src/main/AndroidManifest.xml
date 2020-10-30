@@ -3,6 +3,7 @@
     
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET"/>
     
     <application
         android:name="io.flutter.app.FlutterApplication"
@@ -11,7 +12,7 @@
        
   
         <meta-data android:name="com.google.android.geo.API_KEY" 
-            android:value="AIzaSyCFfZNMKY-0S5JpyUt_HajGvejwJbnUV68" />
+            android:value="@string/mapsApiKey" />
 
         <activity
             android:name=".MainActivity"
