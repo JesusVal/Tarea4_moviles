@@ -11,6 +11,7 @@ class HomeMap extends StatefulWidget {
 }
 
 class _HomeMapState extends State<HomeMap> {
+  GlobalKey<ScaffoldState> _key = GlobalKey();
   Set<Marker> _mapMarkers = Set();
   GoogleMapController _mapController;
   TextEditingController _searchAdreessController = TextEditingController();
@@ -19,6 +20,8 @@ class _HomeMapState extends State<HomeMap> {
     longitude: 20.608148,
     latitude: -103.417576,
   );
+  bool _openSheetBottom = false;
+  PersistentBottomSheetController _controller;
 
   @override
   Widget build(BuildContext context) {
@@ -115,15 +118,13 @@ class _HomeMapState extends State<HomeMap> {
     setState(() {
       _mapMarkers.add(
         Marker(
-          markerId: MarkerId(coord.toString()),
-          position: coord,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
-          infoWindow: InfoWindow(
-            title: coord.toString(),
-            // snippet: _markerAddress,
-          ),
-        ),
+            markerId: MarkerId(coord.toString()),
+            position: coord,
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueViolet),
+            onTap: () {
+              _settingModalBottomSheet(context, coord);
+            }),
       );
     });
   }
@@ -150,10 +151,10 @@ class _HomeMapState extends State<HomeMap> {
           markerId: MarkerId(_currentPosition.toString()),
           position:
               LatLng(_currentPosition.latitude, _currentPosition.longitude),
-          infoWindow: InfoWindow(
-            title: _currentPosition.toString(),
-            snippet: _currentAddress,
-          ),
+          onTap: () {
+            _settingModalBottomSheet(context,
+                LatLng(_currentPosition.latitude, _currentPosition.longitude));
+          },
         ),
       );
     });
@@ -198,17 +199,37 @@ class _HomeMapState extends State<HomeMap> {
       setState(() {
         _mapMarkers.add(
           Marker(
-            markerId: MarkerId(address.toString()),
-            position: address,
-            infoWindow: InfoWindow(
-              title: _currentPosition.toString(),
-              snippet: address.toString(),
-            ),
-          ),
+              markerId: MarkerId(address.toString()),
+              position: address,
+              onTap: () {
+                _settingModalBottomSheet(context, address);
+              }),
         );
       });
     } catch (e) {
       print(e);
     }
+  }
+
+  void _settingModalBottomSheet(context, LatLng address) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return Container(
+            child: new Wrap(
+              children: <Widget>[
+                new ListTile(
+                    leading: new Icon(Icons.location_searching),
+                    title: new Text("Longitude: $address.longitude"),
+                    onTap: () => {}),
+                new ListTile(
+                  leading: new Icon(Icons.location_searching),
+                  title: new Text('Latitude: $address.latitude'),
+                  onTap: () => {},
+                ),
+              ],
+            ),
+          );
+        });
   }
 }
